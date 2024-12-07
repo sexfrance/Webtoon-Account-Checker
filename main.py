@@ -1,7 +1,7 @@
 import os
 from rsa import PublicKey, encrypt as rsae
 from binascii import hexlify
-from logmagix import Logger
+from logmagix import Logger, Home
 import asyncio
 import aiohttp
 import random
@@ -11,15 +11,18 @@ class AccountChecker:
         self.logger = Logger()
         self.proxyless = proxyless
         self.proxies = []
+        self.home = Home("Webtoon Account Checker", align="center", credits="discord.cyberious.xyz")
+        self.home.display()
+        
         if not proxyless:
             with open(proxy_file, 'r') as f:
                 self.proxies = [line.strip() for line in f if line.strip()]
-        # Create output directory if it doesn't exist
+       
         os.makedirs('output', exist_ok=True)
         self.output_files = {
-            'success': 'output/success.txt',
+            'valid': 'output/valid.txt',
             'invalid': 'output/invalid.txt',
-            'verify': 'output/email verify.txt'
+            'verify': 'output/email verification.txt'
         }
     
     def get_proxy(self):
@@ -92,8 +95,10 @@ class AccountChecker:
                 result = ('success', f"{email}:{password}", f"{display_email} | Valid Account")
             elif login_status == 110:
                 result = ('failure', f"{email}:{password}", f"{display_email} | Invalid Account")
+            elif login_status == 210:
+                result = ('failure', f"{email}:{password}", f"{display_email} | Invalid Password")
             elif login_status == 90000:
-                result = ('warning', f"{email}:{password}", f"{display_email} | Email Verification Pending")
+                result = ('warning', f"{email}:{password}", f"{display_email} | Requires Email Verification")
             else:
                 result = ('info', None, f"{display_email} | Unknown Status: {login_status}")
             
@@ -114,7 +119,7 @@ class AccountChecker:
                 
                 if account_data:
                     if level == 'success':
-                        self.save_to_file(self.output_files['success'], account_data)
+                        self.save_to_file(self.output_files['valid'], account_data)
                     elif level == 'failure':
                         self.save_to_file(self.output_files['invalid'], account_data)
                     elif level == 'warning':
