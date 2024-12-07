@@ -1,6 +1,6 @@
 <div align="center">
  
-  <h2 align="center">RecaptchaV2 - Solver</h2>
+  <h2 align="center">Webtoon Account Checker</h2>
   <p align="center">
 This script is an asynchronous account checker for Webtoon accounts that features proxy support, RSA encryption, and efficient batch processing. It reads accounts from a text file, validates them against Webtoon's authentication servers, and provides formatted output with truncated credentials for better readability. The script uses modern async/await patterns for optimal performance and includes comprehensive error handling to manage network issues and invalid responses.
     <br />
