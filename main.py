@@ -75,22 +75,25 @@ class AccountChecker:
             return
             
         try:
+            display_email = email[:12] + "..." if len(email) > 15 else email
+            display_password = password[:8] + "..." if len(password) > 8 else password
+            
             login_status = response['message']['result']['login_status']
             result = None
             
             if login_status == 0:
-                result = ('success', f"{email}:{password} | Valid Account")
+                result = ('success', f"{display_email} | Valid Account")
             elif login_status == 110:
-                result = ('failure', f"{email}:{password} | Invalid Account")
+                result = ('failure', f"{display_email} | Invalid Account")
             elif login_status == 90000:
-                result = ('warning', f"{email}:{password} | Email Verification Pending")
+                result = ('warning', f"{display_email} | Email Verification Pending")
             else:
-                result = ('info', f"{email}:{password} | Unknown Status: {login_status}")
+                result = ('info', f"{display_email} | Unknown Status: {login_status}")
             
             await queue.put(result)
                 
         except KeyError:
-            await queue.put(('failure', f"Error processing response for {email}:{password}"))
+            await queue.put(('failure', f"Error processing response for {display_email}:{display_password}"))
 
     async def log_results(self, queue):
         while True:
