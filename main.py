@@ -11,7 +11,7 @@ class AccountChecker:
         self.logger = Logger()
         self.proxyless = proxyless
         self.proxies = []
-        self.home = Home("Webtoon Account Checker", align="center", credits="discord.cyberious.xyz")
+        self.home = Home("Webtoon Checker", align="center", credits="discord.cyberious.xyz")
         self.home.display()
         
         if not proxyless:
