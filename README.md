@@ -30,6 +30,7 @@ This script is an asynchronous account checker for Webtoon accounts that feature
 - Supports both proxy and proxyless modes.
 - Logs results with different levels (success, failure, warning).
 - Truncates passwords to the first 8 characters for checking.
+- Saves the accounts in separate files depending on the result (Valid, invalid...)
 
 ---
 

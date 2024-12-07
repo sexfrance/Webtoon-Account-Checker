@@ -1,3 +1,4 @@
+import os
 from rsa import PublicKey, encrypt as rsae
 from binascii import hexlify
 from logmagix import Logger
@@ -13,6 +14,13 @@ class AccountChecker:
         if not proxyless:
             with open(proxy_file, 'r') as f:
                 self.proxies = [line.strip() for line in f if line.strip()]
+        # Create output directory if it doesn't exist
+        os.makedirs('output', exist_ok=True)
+        self.output_files = {
+            'success': 'output/success.txt',
+            'invalid': 'output/invalid.txt',
+            'verify': 'output/email verify.txt'
+        }
     
     def get_proxy(self):
         if self.proxyless or not self.proxies:
@@ -76,35 +84,50 @@ class AccountChecker:
             
         try:
             display_email = email[:12] + "..." if len(email) > 15 else email
-            display_password = password[:8] + "..." if len(password) > 8 else password
             
             login_status = response['message']['result']['login_status']
             result = None
             
             if login_status == 0:
-                result = ('success', f"{display_email} | Valid Account")
+                result = ('success', f"{email}:{password}", f"{display_email} | Valid Account")
             elif login_status == 110:
-                result = ('failure', f"{display_email} | Invalid Account")
+                result = ('failure', f"{email}:{password}", f"{display_email} | Invalid Account")
             elif login_status == 90000:
-                result = ('warning', f"{display_email} | Email Verification Pending")
+                result = ('warning', f"{email}:{password}", f"{display_email} | Email Verification Pending")
             else:
-                result = ('info', f"{display_email} | Unknown Status: {login_status}")
+                result = ('info', None, f"{display_email} | Unknown Status: {login_status}")
             
             await queue.put(result)
                 
         except KeyError:
-            await queue.put(('failure', f"Error processing response for {display_email}:{display_password}"))
+            await queue.put(('failure', None, f"Error processing response for {display_email}"))
+
+    async def save_to_file(self, filename, content):
+       async with open(filename, 'a', encoding='utf-8') as f:
+            await f.write(f"{content}\n")
 
     async def log_results(self, queue):
         while True:
             try:
-                level, message = await queue.get()
+                level, account_data, message = await queue.get()
                 getattr(self.logger, level)(message)
+                
+                if account_data:
+                    if level == 'success':
+                        self.save_to_file(self.output_files['success'], account_data)
+                    elif level == 'failure':
+                        self.save_to_file(self.output_files['invalid'], account_data)
+                    elif level == 'warning':
+                        self.save_to_file(self.output_files['verify'], account_data)
+                
                 queue.task_done()
             except asyncio.CancelledError:
                 break
 
     async def start(self):
+        for file_path in self.output_files.values():
+            open(file_path, 'w').close()
+            
         with open('accounts.txt', 'r') as file:
             accounts = [line for line in file.readlines() if line.strip()]
         
@@ -141,7 +164,7 @@ class AccountChecker:
             self.logger.critical(f"Finished checking {total_accounts} accounts")
 
 def main():
-    checker = AccountChecker(proxyless=True)  # Set to True for proxyless mode
+    checker = AccountChecker(proxyless=True)
     asyncio.run(checker.start())
 
 if __name__ == "__main__":
