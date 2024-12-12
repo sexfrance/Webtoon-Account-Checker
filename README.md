@@ -50,6 +50,8 @@ checker = AccountChecker(proxyless=True)  # Set to True for proxyless mode
 asyncio.run(checker.start())
 ```
 
+---
+
 ### 📹 Preview
 
 ![Preview](https://i.imgur.com/oKuWM4p.gif)
